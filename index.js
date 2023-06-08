@@ -26,18 +26,54 @@ async function run() {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
 
+    const usersCollection = client.db("languageGuideDB").collection("users");
     const classesCollection = client
       .db("languageGuideDB")
       .collection("classes");
     const cartsCollection = client.db("languageGuideDB").collection("carts");
 
-    // classes related api
+    // ------------------------------
+    //   users related api
+    // ------------------------------
+    app.get("/users", async (req, res) => {
+      const result = await usersCollection.find().toArray();
+      res.send(result);
+    });
+
+    app.post("/users", async (req, res) => {
+      const user = req.body;
+      const query = { email: user.email };
+      const existingUser = await usersCollection.findOne(query);
+      if (existingUser) {
+        return res.send({ message: "user already exists" });
+      }
+      const result = await usersCollection.insertOne(user);
+      res.send(result);
+    });
+
+    app.patch("/users/admin/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const updatedUser = {
+        $set: {
+          role: "admin",
+        },
+      };
+      const result = await usersCollection.updateOne(filter, updatedUser);
+      res.send(result);
+    });
+
+    // ------------------------------
+    //   classes related api
+    // ------------------------------
     app.get("/classes", async (req, res) => {
       const result = await classesCollection.find().toArray();
       res.send(result);
     });
 
-    // cart related apis
+    //------------------------------
+    //   cart related apis
+    //------------------------------
     app.get("/carts", async (req, res) => {
       const email = req.query.email;
       if (!email) {
