@@ -75,6 +75,18 @@ async function run() {
       }
       next();
     };
+    // Warning: use verifyJWT before using verifyAdmin
+    const verifyInstructor = async (req, res, next) => {
+      const email = req.decoded.email;
+      const query = { email: email };
+      const user = await usersCollection.findOne(query);
+      if (user?.role !== "instructor") {
+        return res
+          .status(403)
+          .send({ error: true, message: "forbidden message" });
+      }
+      next();
+    };
 
     // ------------------------------
     //   users related api
@@ -95,6 +107,7 @@ async function run() {
       res.send(result);
     });
 
+    //  admin by email
     app.get("/users/admin/:email", verifyJWT, async (req, res) => {
       const email = req.params.email;
       if (req.decoded.email !== email) {
@@ -105,13 +118,38 @@ async function run() {
       const result = { admin: user?.role === "admin" };
       res.send(result);
     });
+    //  instructor by email
+    app.get("/users/instructor/:email", verifyJWT, async (req, res) => {
+      const email = req.params.email;
+      if (req.decoded.email !== email) {
+        res.send({ instructor: false });
+      }
+      const query = { email: email };
+      const user = await usersCollection.findOne(query);
+      const result = { instructor: user?.role === "instructor" };
+      res.send(result);
+    });
 
+    //  admin by id
     app.patch("/users/admin/:id", async (req, res) => {
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) };
       const updatedUser = {
         $set: {
           role: "admin",
+        },
+      };
+      const result = await usersCollection.updateOne(filter, updatedUser);
+      res.send(result);
+    });
+
+    //  instructor by id
+    app.patch("/users/instructor/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const updatedUser = {
+        $set: {
+          role: "instructor",
         },
       };
       const result = await usersCollection.updateOne(filter, updatedUser);
