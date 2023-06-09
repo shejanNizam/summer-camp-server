@@ -162,6 +162,11 @@ async function run() {
     // ------------------------------
     //   instructors related api
     // ------------------------------
+    app.get("/allInstructors", async (req, res) => {
+      const result = await instructorsCollection.find().toArray();
+      res.send(result);
+    });
+
     app.get("/popularInstructors", async (req, res) => {
       const result = await instructorsCollection
         .aggregate([{ $sort: { num_of_students: -1 } }, { $limit: 6 }])
