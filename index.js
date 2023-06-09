@@ -47,6 +47,9 @@ async function run() {
     await client.connect();
 
     const usersCollection = client.db("languageGuideDB").collection("users");
+    const instructorsCollection = client
+      .db("languageGuideDB")
+      .collection("instructors");
     const classesCollection = client
       .db("languageGuideDB")
       .collection("classes");
@@ -157,10 +160,27 @@ async function run() {
     });
 
     // ------------------------------
+    //   instructors related api
+    // ------------------------------
+    app.get("/popularInstructors", async (req, res) => {
+      const result = await instructorsCollection
+        .aggregate([{ $sort: { num_of_students: -1 } }, { $limit: 6 }])
+        .toArray();
+      res.send(result);
+    });
+
+    // ------------------------------
     //   classes related api
     // ------------------------------
     app.get("/classes", async (req, res) => {
       const result = await classesCollection.find().toArray();
+      res.send(result);
+    });
+
+    app.get("/popularClasses", async (req, res) => {
+      const result = await classesCollection
+        .aggregate([{ $sort: { enrolled: -1 } }, { $limit: 6 }])
+        .toArray();
       res.send(result);
     });
 
