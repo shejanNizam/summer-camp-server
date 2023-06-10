@@ -212,12 +212,16 @@ async function run() {
       }
 
       const query = { email: email };
-      const result = await cartsCollection.find(query).toArray();
+      const result = await cartsCollection
+        .find(query)
+        .sort({ createdAt: -1 })
+        .toArray();
       res.send(result);
     });
 
     app.post("/carts", async (req, res) => {
       const selectedClass = req.body;
+      selectedClass.createdAt = new Date();
       const result = await cartsCollection.insertOne(selectedClass);
       res.send(result);
     });
