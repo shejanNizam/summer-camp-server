@@ -196,6 +196,14 @@ async function run() {
       res.send(result);
     });
 
+    // addClass by Instructor
+    app.post("/addClass", async (req, res) => {
+      const body = req.body;
+      // body.createdAt = new Date();
+      const result = await classesCollection.insertOne(body);
+      res.send(result);
+    });
+
     //------------------------------
     //   cart related apis
     //------------------------------
