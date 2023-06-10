@@ -189,6 +189,8 @@ async function run() {
       res.send(result);
     });
 
+    // getClasses by Instructor  todo
+
     app.get("/popularClasses", async (req, res) => {
       const result = await classesCollection
         .aggregate([{ $sort: { enrolled: -1 } }, { $limit: 6 }])
