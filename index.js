@@ -66,7 +66,6 @@ async function run() {
       res.send({ token });
     });
 
-    // Warning: use verifyJWT before using verifyAdmin
     const verifyAdmin = async (req, res, next) => {
       const email = req.decoded.email;
       const query = { email: email };
@@ -78,7 +77,7 @@ async function run() {
       }
       next();
     };
-    // Warning: use verifyJWT before using verifyAdmin
+
     const verifyInstructor = async (req, res, next) => {
       const email = req.decoded.email;
       const query = { email: email };
@@ -164,6 +163,14 @@ async function run() {
     // ------------------------------
     app.get("/allInstructors", async (req, res) => {
       const result = await instructorsCollection.find().toArray();
+      res.send(result);
+    });
+
+    app.get("/instructors", async (req, res) => {
+      const result = await usersCollection
+        .find({ role: "instructor" })
+        .sort({ role: 1 })
+        .toArray();
       res.send(result);
     });
 
