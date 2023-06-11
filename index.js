@@ -185,7 +185,10 @@ async function run() {
     //   classes related api
     // ------------------------------
     app.get("/classes", async (req, res) => {
-      const result = await classesCollection.find().toArray();
+      const result = await classesCollection
+        .find()
+        .sort({ createdAt: -1 })
+        .toArray();
       res.send(result);
     });
 
@@ -200,8 +203,15 @@ async function run() {
     // addClass by Instructor
     app.post("/addClass", verifyJWT, verifyInstructor, async (req, res) => {
       const newClass = req.body;
-      // newClass.createdAt = new Date();
+      newClass.createdAt = new Date();
       const result = await classesCollection.insertOne(newClass);
+      res.send(result);
+    });
+
+    app.delete("/classes/:id", verifyJWT, verifyAdmin, async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await classesCollection.deleteOne(query);
       res.send(result);
     });
 
