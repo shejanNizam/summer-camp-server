@@ -190,7 +190,6 @@ async function run() {
     });
 
     // getClasses by Instructor  todo
-
     app.get("/popularClasses", async (req, res) => {
       const result = await classesCollection
         .aggregate([{ $sort: { enrolled: -1 } }, { $limit: 6 }])
@@ -199,10 +198,10 @@ async function run() {
     });
 
     // addClass by Instructor
-    app.post("/addClass", async (req, res) => {
-      const body = req.body;
-      // body.createdAt = new Date();
-      const result = await classesCollection.insertOne(body);
+    app.post("/addClass", verifyJWT, verifyInstructor, async (req, res) => {
+      const newClass = req.body;
+      // newClass.createdAt = new Date();
+      const result = await classesCollection.insertOne(newClass);
       res.send(result);
     });
 
