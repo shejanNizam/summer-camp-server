@@ -4,6 +4,7 @@ const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const cors = require("cors");
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
+const stripe = require("stripe")(process.env.PAYMENT_SECRET_KEY);
 const port = process.env.PORT || 7000;
 
 // middleware
@@ -54,6 +55,9 @@ async function run() {
       .db("languageGuideDB")
       .collection("classes");
     const cartsCollection = client.db("languageGuideDB").collection("carts");
+    const paymentCollection = client
+      .db("languageGuideDB")
+      .collection("payments");
 
     // ------------------------------
     //   jwt related api
@@ -250,6 +254,38 @@ async function run() {
       const query = { _id: new ObjectId(id) };
       const result = await cartsCollection.deleteOne(query);
       res.send(result);
+    });
+
+    //------------------------------
+    //   Payment related apis
+    //------------------------------
+
+    // create payment intent
+    app.post("/create-payment-intent", verifyJWT, async (req, res) => {
+      const { price } = req.body;
+      const amount = parseInt(price * 100);
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: amount,
+        currency: "usd",
+        payment_method_types: ["card"],
+      });
+
+      res.send({
+        clientSecret: paymentIntent.client_secret,
+      });
+    });
+
+    // payment related api
+    app.post("/payments", verifyJWT, async (req, res) => {
+      const payment = req.body;
+      const insertResult = await paymentCollection.insertOne(payment);
+      // res.send(insertResult);
+      const query = {
+        _id: { $in: payment.cartClasses.map((id) => new ObjectId(id)) },
+      };
+      const deleteResult = await cartsCollection.deleteMany(query);
+
+      res.send({ insertResult, deleteResult });
     });
 
     // Send a ping to confirm a successful connection
